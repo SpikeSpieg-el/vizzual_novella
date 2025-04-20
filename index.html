@@ -1,162 +1,180 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Визуальная новелла с кошкой</title>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.1/dist/full.css" rel="stylesheet" type="text/css" />
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" type="text/css" />
-    
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            overflow-x: hidden;
-            transition: background-image 0.5s ease; /* Добавляем плавный переход для фона */
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Визуальная новелла с кошкой</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.1/dist/full.css" rel="stylesheet" type="text/css" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" type="text/css" />
 
-        .bg-gradient-circular {
-            background: radial-gradient(circle at 50% 100%, #1e293b, #0f172a);
-        }
+  <style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    overflow-x: hidden;
+    transition: background-image 0.5s ease;
+  }
 
-        .bg-glassmorphism {
-            background-color: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-        }
+  .bg-gradient-circular {
+    background: radial-gradient(circle at 50% 100%, #1e293b, #0f172a);
+  }
 
-        .custom-card {
-            border-radius: 20px;
-            overflow: hidden;
-        }
+  .glass-card {
+    background-color: rgba(17, 24, 39, 0.9); /* Почти чёрная, с лёгкой прозрачностью */
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    color: #f8fafc;
+  }
 
-        .character-container {
-            overflow: hidden;
-            border-radius: 20px;
-        }
+  .character-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.4s ease;
+  opacity: 1;
+}
 
-        .character-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 20px;
-        }
+  
 
-        #dialogue-box p {
-            margin-bottom: 0;
-        }
-    </style>
+  .choice-btn {
+    display: block;
+    width: 100%;
+    padding: 1rem 1.5rem;
+    margin-top: 1rem;
+    background-color: #334155; /* slate-800 */
+    border: 1px solid #64748b; /* slate-500 */
+    border-radius: 0.75rem;
+    color: #f1f5f9;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .choice-btn:hover {
+    background-color: #475569; /* slate-700 */
+    border-color: #fbbf24;     /* amber-400 */
+    color: #fbbf24;
+    transform: translateY(-2px);
+  }
+</style>
+
 </head>
-<body class="bg-gradient-circular">
+<body class="bg-gradient-circular text-white min-h-screen flex items-center justify-center py-12">
 
-    <div class="container mx-auto px-4">
-        <div class="flex flex-col md:flex-row items-center justify-center mt-16 gap-4">
-            <div class="w-full md:w-1/2 lg:w-1/3 character-container">
-                <img id="character-img" class="character-image" src="" alt="Character">
-            </div>
-            <div class="w-full md:w-1/2 lg:w-1/3 bg-white p-8 rounded-xl shadow-lg custom-card">
-                <div class="text-center mb-4">
-                    <h2 class="text-2xl font-bold mb-2">Диалог с кошкой</h2>
-                </div>
-                <div id="dialogue-box" class="text-gray-700 leading-relaxed mb-4"></div>
-                <ul id="choices" class="list-none p-0"></ul>
-            </div>
-        </div>
+  <div class="container mx-auto px-4">
+    <div class="flex flex-col md:flex-row items-center justify-center gap-10">
+      
+      <!-- Персонаж -->
+      <div class="w-full md:w-1/2 lg:w-1/3">
+        <img id="character-img" class="character-image" src="" alt="Персонаж" />
+      </div>
+
+      <!-- Диалоговая часть -->
+      <div class="w-full md:w-1/2 lg:w-1/3 glass-card">
+        <h2 class="text-3xl font-bold text-center mb-4">Диалог с кошкой</h2>
+        <div id="dialogue-box" class="text-lg text-slate-200 mb-4 min-h-[80px]"></div>
+        <ul id="choices" class="list-none p-0"></ul>
+      </div>
     </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.11.5/dist/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/scrollreveal@4.0.9/dist/scrollreveal.min.js"></script>
+  <!-- Сценарии -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.11.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/scrollreveal@4.0.9/dist/scrollreveal.min.js"></script>
 
-    <script>
-        // Переменные
-        let dialogueData = {}; // Сюда будут загружены данные диалога
-        let currentNode = "start";
-        let previousBackground = ''; // Хранение предыдущего фона
+  <script>
+    // Плавная замена изображения персонажа
 
-        // Функция для смены фона
-        function changeBackground(imageUrl) {
-            document.body.style.backgroundImage = `url(${imageUrl})`;
-            document.body.style.backgroundSize = 'cover';  // Изменение размера фона
-            document.body.style.backgroundPosition = 'center';
-            document.body.style.backgroundRepeat = 'no-repeat';
+    let dialogueData = {};
+    let currentNode = "start";
+    let previousBackground = '';
+
+    function changeBackground(imageUrl) {
+      document.body.style.backgroundImage = `url(${imageUrl})`;
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.backgroundPosition = 'center';
+      document.body.style.backgroundRepeat = 'no-repeat';
+    }
+
+    function loadDialogueData() {
+      fetch('dialogueData.json')
+        .then(response => response.json())
+        .then(data => {
+          dialogueData = data;
+          updateDialogue();
+        })
+        .catch(error => {
+          console.error('Ошибка при загрузке данных:', error);
+        });
+    }
+
+    function typeWriter(element, text, callback) {
+      let i = 0;
+      const speed = 35;
+
+      const interval = setInterval(() => {
+        if (i < text.length) {
+          element.textContent += text.charAt(i);
+          i++;
+        } else {
+          clearInterval(interval);
+          if (callback) callback();
         }
+      }, speed);
+    }
 
-        // Функция для загрузки данных из JSON файла
-        function loadDialogueData() {
-            fetch('dialogueData.json')  // Загружаем JSON файл
-                .then(response => response.json())
-                .then(data => {
-                    dialogueData = data;
-                    updateDialogue();  // После загрузки данных, обновляем диалог
-                })
-                .catch(error => {
-                    console.error('Ошибка при загрузке данных:', error);
-                });
-        }
+    function updateDialogue() {
+      const dialogueBox = document.getElementById('dialogue-box');
+      const choicesList = document.getElementById('choices');
+      const characterImg = document.getElementById('character-img');
 
-        // Функция, которая печатает текст по буквам
-        function typeWriter(element, text, callback) {
-            let i = 0;
-            const speed = 50; // Скорость печати (мс)
+      dialogueBox.textContent = '';
+      typeWriter(dialogueBox, dialogueData[currentNode].text);
 
-            const interval = setInterval(() => {
-                if (i < text.length) {
-                    element.textContent += text.charAt(i);
-                    i++;
-                } else {
-                    clearInterval(interval);
-                    if (callback) {
-                        callback();
-                    }
-                }
-            }, speed);
-        }
+      characterImg.style.opacity = 0; // Сначала исчезает
 
-        // Функция обновления диалога
-        function updateDialogue() {
-            const dialogueBox = document.getElementById('dialogue-box');
-            const choicesList = document.getElementById('choices');
-            const characterImg = document.getElementById('character-img');
+setTimeout(() => {
+  characterImg.src = dialogueData[currentNode].image;
+  characterImg.onload = () => {
+    characterImg.style.opacity = 1; // Появляется после загрузки
+  };
+}, 400); // Время должно совпадать с transition: 0.4s
 
-            dialogueBox.innerHTML = `<p>${dialogueData[currentNode].text}</p>`;
-            characterImg.src = dialogueData[currentNode].image;
 
-            // Проверка на наличие фона и установка предыдущего фона, если нет
-            const currentBackground = dialogueData[currentNode].background;
-            if (currentBackground) {
-                previousBackground = currentBackground; // Сохраняем текущий фон, если он есть
-                changeBackground(currentBackground);
-            } else {
-                changeBackground(previousBackground); // Используем предыдущий фон
-            }
+      const currentBackground = dialogueData[currentNode].background;
+      if (currentBackground) {
+        previousBackground = currentBackground;
+        changeBackground(currentBackground);
+      } else {
+        changeBackground(previousBackground);
+      }
 
-            choicesList.innerHTML = '';
-            for (const choice in dialogueData[currentNode].choices) {
-                const listItem = document.createElement('li');
-                const choiceLink = document.createElement('a');
-                choiceLink.textContent = ''; // Инициализируем текстовое содержимое пустой строкой
+      choicesList.innerHTML = '';
+      for (const choice in dialogueData[currentNode].choices) {
+        const listItem = document.createElement('li');
+        const button = document.createElement('button');
+        button.className = 'choice-btn';
+        typeWriter(button, choice, () => {
+          button.addEventListener('click', () => {
+            currentNode = dialogueData[currentNode].choices[choice];
+            updateDialogue();
+          });
+        });
+        listItem.appendChild(button);
+        choicesList.appendChild(listItem);
+      }
+    }
 
-                typeWriter(choiceLink, choice, () => {
-                    choiceLink.href = '#';
-                    choiceLink.addEventListener('click', () => {
-                        currentNode = dialogueData[currentNode].choices[choice];
-                        updateDialogue();
-                    });
-                });
+    loadDialogueData();
 
-                listItem.appendChild(choiceLink);
-                choicesList.appendChild(listItem);
-            }
-        }
+    gsap.from("#dialogue-box", { duration: 1, opacity: 0, y: -50, ease: "power2.out" });
+    gsap.from("#choices li", { duration: 1, opacity: 0, y: 50, stagger: 0.2, ease: "power2.out" });
+    gsap.from("#character-img", { duration: 1, opacity: 0, scale: 0.8, ease: "power2.out" });
 
-        // Загрузка данных и инициализация диалога
-        loadDialogueData();
-
-        // Пример анимации GSAP
-        gsap.from("#dialogue-box", { duration: 1, opacity: 0, y: -50, ease: "power2.out" });
-        gsap.from("#choices li", { duration: 1, opacity: 0, y: 50, stagger: 0.2, ease: "power2.out" });
-        gsap.from("#character-img", { duration: 1, opacity: 0, scale: 0.8, ease: "power2.out" });
-
-        // Пример ScrollReveal
-        ScrollReveal().reveal('#dialogue-box, #choices, #character-img', { duration: 1000, distance: '50px', origin: 'bottom' });
-    </script>
+    ScrollReveal().reveal('#dialogue-box, #choices, #character-img', { duration: 1000, distance: '50px', origin: 'bottom' });
+  </script>
 </body>
 </html>
